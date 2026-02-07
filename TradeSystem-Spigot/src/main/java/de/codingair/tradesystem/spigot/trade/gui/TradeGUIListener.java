@@ -19,6 +19,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -125,6 +126,13 @@ public class TradeGUIListener implements Listener {
             if (trade != null && trade.inMainGUI(player)) {
                 // allow blocking by other plugins
                 if (e.isCancelled()) return;
+
+                // 플레이어 인벤토리의 0번 칸 클릭 차단
+                Inventory bottomInventory = CompatibilityUtilEvent.getBottomInventory(e);
+                if (bottomInventory.equals(e.getClickedInventory()) && e.getSlot() == 0) {
+                    e.setCancelled(true);
+                    return;
+                }
 
                 // cancel everything and project changes later
                 e.setCancelled(true);
