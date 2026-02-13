@@ -7,10 +7,22 @@ import de.codingair.codingapi.player.gui.inventory.v2.exceptions.NoPageException
 import de.codingair.codingapi.server.specification.Version;
 import de.codingair.tradesystem.spigot.TradeSystem;
 import de.codingair.tradesystem.spigot.trade.Trade;
+import de.codingair.tradesystem.spigot.extras.external.PluginDependencies;
+import de.codingair.tradesystem.spigot.extras.external.mmoitems.MMOItemsDependency;
 import de.codingair.tradesystem.spigot.trade.gui.layout.shulker.ShulkerPeekGUI;
 import de.codingair.tradesystem.spigot.trade.gui.layout.utils.Perspective;
 import de.codingair.tradesystem.spigot.utils.CompatibilityUtilEvent;
 import de.codingair.tradesystem.spigot.utils.Lang;
+import io.lumine.mythic.lib.api.item.NBTItem;
+import net.Indyuce.mmoitems.MMOItems;
+import net.Indyuce.mmoitems.api.item.mmoitem.MMOItem;
+import net.Indyuce.mmoitems.api.item.mmoitem.VolatileMMOItem;
+import net.Indyuce.mmoitems.stat.data.BooleanData;
+import net.Indyuce.mmoitems.stat.type.ItemStat;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -132,6 +144,33 @@ public class TradeGUIListener implements Listener {
                 if (bottomInventory.equals(e.getClickedInventory()) && e.getSlot() == 0) {
                     e.setCancelled(true);
                     return;
+                }
+
+                // MMOItems: TRADE_DISABLED 스탯이 normal이면 판매 불가
+                if (PluginDependencies.isEnabled(MMOItemsDependency.class)) {
+                    try {
+                        // 거래에 추가되는 아이템 확인 (커서 또는 현재 아이템)
+                        ItemStack itemToCheck = CompatibilityUtilEvent.getCursor(e);
+                        if (itemToCheck == null || itemToCheck.getType().isAir()) {
+                            itemToCheck = e.getCurrentItem();
+                        }
+                        
+                        if (itemToCheck != null && !itemToCheck.getType().isAir()) {
+                            VolatileMMOItem mmoItem = new VolatileMMOItem(NBTItem.get(itemToCheck));
+                            ItemStat tradeDisabledStat = MMOItems.plugin.getStats().get("TRADE_DISABLED");
+                            if (tradeDisabledStat != null && mmoItem.hasData(tradeDisabledStat)) {
+                                String tradeDisabledValue = String.valueOf(mmoItem.getData(tradeDisabledStat));
+                                if ("normal".equalsIgnoreCase(tradeDisabledValue)) {
+                                    e.setCancelled(true);
+                                    Lang.send(player, "Trade_Placed_Blocked_Item");
+                                    TradeSystem.getInstance().getTradeManager().playBlockSound(player);
+                                    return;
+                                }
+                            }
+                        }
+                    } catch (Exception ex) {
+                        // MMOItems API 오류 시 무시하고 계속 진행
+                    }
                 }
 
                 // cancel everything and project changes later
