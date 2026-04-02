@@ -5,6 +5,7 @@ import de.codingair.codingapi.player.gui.anvil.AnvilSlot;
 import de.codingair.codingapi.player.gui.inventory.v2.GUI;
 import de.codingair.codingapi.player.gui.inventory.v2.buttons.AnvilButton;
 import de.codingair.codingapi.player.gui.inventory.v2.buttons.Button;
+import de.codingair.codingapi.tools.Call;
 import de.codingair.codingapi.tools.items.ItemBuilder;
 import de.codingair.tradesystem.spigot.trade.Trade;
 import de.codingair.tradesystem.spigot.trade.gui.layout.types.*;
@@ -12,6 +13,7 @@ import de.codingair.tradesystem.spigot.trade.gui.layout.types.feedback.IconResul
 import de.codingair.tradesystem.spigot.trade.gui.layout.types.utils.IconState;
 import de.codingair.tradesystem.spigot.trade.gui.layout.types.utils.TriFunction;
 import de.codingair.tradesystem.spigot.trade.gui.layout.utils.Perspective;
+import de.codingair.tradesystem.spigot.utils.AnvilTitleSupport;
 import de.codingair.tradesystem.spigot.utils.Lang;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -61,6 +63,13 @@ public abstract class AnvilGUIIcon<G> extends LayoutIcon implements TradeIcon, C
             }
 
             @Override
+            public boolean open(ClickType clickType, GUI gui, Call call) {
+                boolean opened = super.open(clickType, gui, call);
+                AnvilTitleSupport.refreshTitleAfterOpen(gui.getPlayer(), getTitle());
+                return opened;
+            }
+
+            @Override
             public boolean canClick(ClickType clickType) {
                 return state.checkState(trade, perspective, viewer) && isClickable(trade, perspective, viewer);
             }
@@ -104,3 +113,5 @@ public abstract class AnvilGUIIcon<G> extends LayoutIcon implements TradeIcon, C
         state.disable(onClickMessage);
     }
 }
+
+
